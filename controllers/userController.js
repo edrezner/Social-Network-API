@@ -47,7 +47,7 @@ module.exports = {
       const user = await User.create(req.body);
       res.json(user);
     } catch {
-      (err) => res.status(400).json(err);
+      (err) => res.status(500).json(err);
     }
   },
 
@@ -55,6 +55,9 @@ module.exports = {
     try {
       const user = await User.findOneAndUpdate(
         { _id: req.params.userId },
+        {
+          ...req.body,
+        },
         {
           new: true,
           runValidators: true,
@@ -65,22 +68,26 @@ module.exports = {
       }
       res.json(user);
     } catch {
-      (err) => res.status(400).json(err);
+      (err) => res.status(500).json(err);
     }
   },
 
   async deleteUser(req, res) {
-    try {
-      const user = await User.findOneAndDelete({ _id: req.paramas.userId });
-
-      if (!user) {
-        return res.status(404).json({ message: "No user found with that ID" });
+    // try {
+    const user = await User.findOneAndDelete({ _id: req.params.userId }).catch(
+      (err) => {
+        res.json(err);
       }
-      await Thought.deleteMany({ username: user.username });
-      return res.json({ message: "User and associated thoughts deleted" });
-    } catch {
-      (err) => res.status(400).json(err);
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "No user found with that ID" });
     }
+    await Thought.deleteMany({ username: user.username });
+    res.json({ message: "User and associated thoughts deleted" });
+    // } catch {
+    //   (err) => res.status(500).json(err);
+    // }
   },
 
   async addFriend(req, res) {
@@ -89,14 +96,23 @@ module.exports = {
         { _id: req.params.userId },
         { $push: { friends: req.params.friendId } },
         { new: true }
-      );
+      )
+        .populate({
+          path: "thoughts",
+          select: "-__v",
+        })
+        .populate({
+          path: "friends",
+          select: "-__v",
+        })
+        .select("-__v");
 
       if (!user) {
         return res.status(404).json({ message: "No user found with that ID" });
       }
       res.json(user);
     } catch {
-      (err) => res.status(400).json(err);
+      (err) => res.status(500).json(err);
     }
   },
 
@@ -113,7 +129,20 @@ module.exports = {
       }
       res.json(user);
     } catch {
-      (err) => res.status(400).json(err);
+      (err) => res.status(500).json(err);
     }
   },
 };
+
+//    Querying users
+//   User.find()
+//     .then((users) => {
+//       console.log('Users:', users);
+//     })
+//     .catch((error) => {
+//       console.error('Error querying users:', error);
+//     });
+// })
+// .catch((error) => {
+//   console.error('Error connecting to MongoDB:', error);
+// });

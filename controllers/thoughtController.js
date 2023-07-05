@@ -46,15 +46,13 @@ module.exports = {
     try {
       const thought = await Thought.create(req.body);
       const thoughtData = await User.findOneAndUpdate(
-        { _id: req.body.userId },
+        { username: req.body.username },
         { $push: { thoughts: thought._id } },
         { new: true }
       );
 
       if (!thoughtData) {
-        return res
-          .status(404)
-          .json({ message: "No user found with this username" });
+        return res.status(404).json({ message: "No user found with this ID" });
       }
 
       res.json(thoughtData);
@@ -75,7 +73,7 @@ module.exports = {
       if (!thoughtData) {
         return res
           .status(404)
-          .json({ message: "No thought found with this id!" });
+          .json({ message: "No thought found with that ID" });
       }
 
       res.json(thoughtData);
@@ -92,7 +90,7 @@ module.exports = {
       if (!thoughtData) {
         return res
           .status(404)
-          .json({ message: "No thought found with this id!" });
+          .json({ message: "No thought found with that ID" });
       }
 
       const userData = await User.findOneAndUpdate(
@@ -104,7 +102,7 @@ module.exports = {
       if (!userData) {
         return res
           .status(404)
-          .json({ message: "No user found with this username!" });
+          .json({ message: "No user found with this username" });
       }
 
       res.json(userData);
@@ -131,7 +129,7 @@ module.exports = {
       res.json(thought);
     } catch (err) {
       console.log(err);
-      res.status(400).json(err);
+      res.status(500).json(err);
     }
   },
 
@@ -139,7 +137,7 @@ module.exports = {
     try {
       const thought = await Thought.findOneAndUpdate(
         { _id: req.params.thoughtId },
-        { $pull: { reactions: { reactionId: req.params.reactionId } } },
+        { $pull: { reactions: { reactionId: req.body.reactionId } } },
         { new: true }
       );
 
@@ -152,7 +150,7 @@ module.exports = {
       res.json(thought);
     } catch (err) {
       console.log(err);
-      res.status(400).json(err);
+      res.status(500).json(err);
     }
   },
 };
